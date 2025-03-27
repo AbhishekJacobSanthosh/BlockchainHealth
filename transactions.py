@@ -1,35 +1,40 @@
-from blockchain import Blockchain
+from blockchain import load_blockchain, save_blockchain, create_block
+from users import load_users, save_users
 
-blockchain = Blockchain()
+def add_patient(doctor):
+    """Doctor adds a new patient (Genesis Block)."""
+    patient_id = input("🆕 Enter Patient ID: ")
+    transactions = [f"Doctor {doctor} added Patient {patient_id}"]
+    blockchain = create_block("0" * 64, transactions)
+    print("✅ Patient added successfully!")
 
-def add_patient(username):
-    patient_name = input("👤 Enter patient name: ")
-    blockchain.new_transaction("Hospital", patient_name, "New patient record created.")
-    blockchain.mine_block()
-    print(f"✅ Genesis block created for {patient_name}.\n")
-
-def update_patient(username):
-    patient = input("👤 Enter patient name: ")
-    details = input("📝 Enter update (e.g., 'Blood test ordered'): ")
+def update_patient(doctor):
+    """Doctor updates patient details."""
+    patient_id = input("🔄 Enter Patient ID to update: ")
+    new_data = input("✏️ Enter new patient details: ")
+    blockchain = load_blockchain()
+    previous_hash = blockchain[-1]["hash"]
     
-    blockchain.new_transaction(username, patient, details)  # Store actual doctor name
-    blockchain.update_balance(username, 10)  # Give doctor incentive
-    
-    blockchain.mine_block()
-    print(f"✅ Transaction added: {username} updated {patient}'s record.\n")
+    transactions = [f"Doctor {doctor} updated Patient {patient_id}: {new_data}"]
+    create_block(previous_hash, transactions)
+    print("✅ Patient data updated successfully!")
 
-def add_test_results(username):
-    patient = input("👤 Enter patient name: ")
-    details = input("📊 Enter test results: ")
-    
-    blockchain.new_transaction(username, patient, details)  # Store actual diagnostic center name
-    blockchain.update_balance(username, 10)  # Give incentive
-    
-    blockchain.mine_block()
-    print(f"✅ Test results added for {patient}.\n")
+def add_test_results(diagnostic):
+    """Diagnostic center adds test results."""
+    patient_id = input("🧪 Enter Patient ID for test: ")
+    test_result = input("📜 Enter test results: ")
+    blockchain = load_blockchain()
+    previous_hash = blockchain[-1]["hash"]
 
-def access_patient_data():
-    blockchain.display_blockchain()
+    transactions = [f"Diagnostic {diagnostic} added test results for Patient {patient_id}: {test_result}"]
+    create_block(previous_hash, transactions)
+    
+    users = load_users()
+    users[diagnostic]["balance"] += 10  # Reward diagnostic center
+    save_users(users)
+    print("✅ Test results added & balance updated!")
 
 def check_balance(username):
-    print(f"💰 Balance for {username}: {blockchain.get_balance(username)}\n")
+    """Check user balance."""
+    users = load_users()
+    print(f"💰 Your Balance: {users[username]['balance']} e-cash")
